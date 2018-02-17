@@ -6,6 +6,7 @@ podTemplate(label: 'mypod') {
                 def hosts = ['18.195.197.32', '18.196.37.97', '18.195.180.75', '18.196.67.191']
                 for(String host : hosts) {
                     pullRepo(host)
+                    commitAndPushRepo(host)
                 }
             }    
         }
@@ -15,4 +16,10 @@ podTemplate(label: 'mypod') {
 def pullRepo(String host) {
     sh "ssh-keyscan -t rsa ${host} >> ~/.ssh/known_hosts"
     sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' pull https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
+}
+
+def commitAndPushRepo(String host) {
+    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' add --all https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
+    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' commit -m 'new version' https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
+    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
 }
