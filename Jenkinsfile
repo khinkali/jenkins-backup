@@ -6,7 +6,7 @@ podTemplate(label: 'mypod') {
                 def hosts = ['18.195.197.32', '18.196.37.97', '18.195.180.75', '18.196.67.191']
                 for(String host : hosts) {
                     addToKnownHosts(host)
-                    hardPull(host)
+                    pullRepo(host)
                     commitAndPushRepo(host)
                 }
                 for(String host : hosts) {
@@ -15,11 +15,6 @@ podTemplate(label: 'mypod') {
             }    
         }
     }
-}
-
-def hardPull(String host) {
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' fetch https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup --all"
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' reset --hard origin/master https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
 }
 
 def addToKnownHosts(String host) {
