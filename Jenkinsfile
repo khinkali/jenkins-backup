@@ -18,7 +18,7 @@ podTemplate(label: 'mypod') {
 }
 
 def hardPull(String host) {
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' fetch --all"
+    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' fetch https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup --all"
     sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' reset --hard origin/master https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
 }
 
