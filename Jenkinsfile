@@ -20,6 +20,6 @@ def pullRepo(String host) {
 
 def commitAndPushRepo(String host) {
     sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' add --all"
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' commit -m 'new version'"
+    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' commit -m \"new version\""
     sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
 }
