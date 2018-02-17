@@ -1,18 +1,31 @@
 podTemplate(label: 'mypod') {
     node('mypod') {
-        withCredentials([sshUserPrivateKey(credentialsId: 'server', keyFileVariable: 'keyfile', usernameVariable: 'username')]) {
-            withCredentials([usernamePassword(credentialsId: 'bitbucket', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                sh "mkdir ~/.ssh/"
-                def hosts = ['18.195.197.32', '18.196.37.97', '18.195.180.75', '18.196.67.191']
-                for(String host : hosts) {
-                    addToKnownHosts(host)
-                    pullRepo(host)
-                    commitAndPushRepo(host)
+        properties([
+                buildDiscarder(
+                        logRotator(artifactDaysToKeepStr: '',
+                                artifactNumToKeepStr: '',
+                                daysToKeepStr: '',
+                                numToKeepStr: '30'
+                        )
+                ),
+                pipelineTriggers([cron('1 0 * * *')])
+        ])
+
+        stage('create backup') {
+            withCredentials([sshUserPrivateKey(credentialsId: 'server', keyFileVariable: 'keyfile', usernameVariable: 'username')]) {
+                withCredentials([usernamePassword(credentialsId: 'bitbucket', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh "mkdir ~/.ssh/"
+                    def hosts = ['18.195.197.32', '18.196.37.97', '18.195.180.75', '18.196.67.191']
+                    for(String host : hosts) {
+                        addToKnownHosts(host)
+                        pullRepo(host)
+                        commitAndPushRepo(host)
+                    }
+                    for(String host : hosts) {
+                        pullRepo(host)
+                    }
                 }
-                for(String host : hosts) {
-                    pullRepo(host)
-                }
-            }    
+            }
         }
     }
 }
