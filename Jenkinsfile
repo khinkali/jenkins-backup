@@ -7,9 +7,11 @@ podTemplate(label: 'mypod') {
                                 daysToKeepStr: '',
                                 numToKeepStr: '30'
                         )
-                ),
-                pipelineTriggers([cron('1 0 * * *')])
+                )
         ])
+        triggers {
+            cron('1 0 * * *')
+        }
 
         stage('create backup') {
             withCredentials([sshUserPrivateKey(credentialsId: 'server', keyFileVariable: 'keyfile', usernameVariable: 'username')]) {
