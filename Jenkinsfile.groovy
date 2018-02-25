@@ -14,14 +14,15 @@ podTemplate(label: 'mypod') {
         stage('create backup') {
             withCredentials([sshUserPrivateKey(credentialsId: 'server', keyFileVariable: 'keyfile', usernameVariable: 'username')]) {
                 withCredentials([usernamePassword(credentialsId: 'bitbucket', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh "mkdir ${GIT_PASSWORD}"
                     sh "mkdir ~/.ssh/"
                     def hosts = ['18.195.197.32', '18.196.37.97', '18.195.180.75', '18.196.67.191']
-                    for(String host : hosts) {
+                    for (String host : hosts) {
                         addToKnownHosts(host)
                         pullRepo(host)
                         commitAndPushRepo(host)
                     }
-                    for(String host : hosts) {
+                    for (String host : hosts) {
                         pullRepo(host)
                     }
                 }
