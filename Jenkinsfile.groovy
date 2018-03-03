@@ -12,34 +12,27 @@ podTemplate(label: 'mypod') {
         ])
 
         stage('create backup') {
-            withCredentials([sshUserPrivateKey(credentialsId: 'server', keyFileVariable: 'keyfile', usernameVariable: 'username')]) {
+            def kc = 'kubectl'
+            container('kubectl') {
+                def jenkinsPods = sh(
+                        script: "${kc} get po -l app=jenkins --no-headers",
+                        returnStdout: true
+                ).trim()
+                def podNameLine = jenkinsPods.split('\n')[0]
+                def startIndex = podNameLine.indexOf(' ')
+                if (startIndex == -1) {
+                    return
+                }
+                def podName = podNameLine.substring(0, startIndex)
+                sh "${kc} exec ${podName} -- git -C '/var/jenkins_home' config user.email \"jenkins@khinkali.ch\""
+                sh "${kc} exec ${podName} -- git -C '/var/jenkins_home' config user.name \"Jenkins\""
+                sh "${kc} exec ${podName} -- git -C '/var/jenkins_home' add --all"
+                sh "${kc} exec ${podName} -- git -C '/var/jenkins_home' diff --quiet && ${kc} exec ${podName} -- git -C '/var/jenkins_home' diff --staged --quiet || ${kc} exec ${podName} -- git -C '/var/jenkins_home' commit -am 'new_version'"
                 withCredentials([usernamePassword(credentialsId: 'bitbucket', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh "mkdir ~/.ssh/"
-                    def hosts = ['18.195.197.32', '18.196.37.97', '18.195.180.75', '18.196.67.191']
-                    for (String host : hosts) {
-                        addToKnownHosts(host)
-                        pullRepo(host)
-                        commitAndPushRepo(host)
-                    }
-                    for (String host : hosts) {
-                        pullRepo(host)
-                    }
+                    sh "${kc} exec ${podName} -- git -C '/var/jenkins_home' push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
                 }
             }
         }
+
     }
-}
-
-def addToKnownHosts(String host) {
-    sh "ssh-keyscan -t rsa ${host} >> ~/.ssh/known_hosts"
-}
-
-def pullRepo(String host) {
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' pull https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
-}
-
-def commitAndPushRepo(String host) {
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' add --all"
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' diff --quiet && ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' diff --staged --quiet || ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' commit -am 'new_version'"
-    sh "ssh -i ${keyfile} ${username}@${host} git -C '/home/${username}/jenkins_backup' push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/khinkali/jenkins_backup"
 }
