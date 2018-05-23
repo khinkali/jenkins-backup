@@ -22,6 +22,8 @@ podTemplate(label: 'mypod', containers: [
         ])
 
         stage('create backup') {
+            currentBuild.displayName = getTimeDateDisplayName()
+
             def kc = 'kubectl'
             def containerPath = '/var/jenkins_home'
             def containerName = 'jenkins'
