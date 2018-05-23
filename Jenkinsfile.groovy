@@ -28,7 +28,7 @@ podTemplate(label: 'mypod', containers: [
             def podLabel = 'app=jenkins'
             def repositoryUrl = 'bitbucket.org/khinkali/jenkins_backup'
             container('kubectl') {
-                backup(podLabel, containerName, containerPath, kc, repositoryUrl)
+                backup(podLabel, containerName, containerPath, repositoryUrl, kc)
             }
         }
 
