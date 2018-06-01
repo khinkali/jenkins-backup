@@ -9,30 +9,34 @@ podTemplate(label: 'mypod', containers: [
         volumes: [
                 hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
         ]) {
-    node('mypod') {
-        properties([
-                buildDiscarder(
-                        logRotator(artifactDaysToKeepStr: '',
-                                artifactNumToKeepStr: '',
-                                daysToKeepStr: '',
-                                numToKeepStr: '30'
-                        )
-                ),
-                pipelineTriggers([cron('0 0 * * *')])
-        ])
+    try {
+        node('mypod') {
+            properties([
+                    buildDiscarder(
+                            logRotator(artifactDaysToKeepStr: '',
+                                    artifactNumToKeepStr: '',
+                                    daysToKeepStr: '',
+                                    numToKeepStr: '30'
+                            )
+                    ),
+                    pipelineTriggers([cron('0 0 * * *')])
+            ])
 
-        stage('create backup') {
-            currentBuild.displayName = getTimeDateDisplayName()
+            stage('create backup') {
+                currentBuild.displayName = getTimeDateDisplayName()
 
-            def kc = 'kubectl'
-            def containerPath = '/var/jenkins_home'
-            def containerName = 'jenkins'
-            def podLabel = 'app=jenkins'
-            def repositoryUrl = 'bitbucket.org/khinkali/jenkins_backup'
-            container('kubectl') {
-                backup(podLabel, containerName, containerPath, repositoryUrl, kc)
+                def kc = 'kubectl'
+                def containerPath = '/var/jenkins_home'
+                def containerName = 'jenkins'
+                def podLabel = 'app=jenkins'
+                def repositoryUrl = 'bitbucket.org/khinkali/jenkins_backup'
+                container('kubectl') {
+                    backup(podLabel, containerName, containerPath, repositoryUrl, kc)
+                }
             }
-        }
 
+        }
+    } catch (all) {
+        slackSend "Build Failed - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
     }
 }
